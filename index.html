@@ -1,179 +1,218 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    />
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="css/bootstrap.min.css" />
+<html>
+    <head>
+        <title>Snake Game</title>
 
-    <title>Bootstrap Template</title>
-  </head>
-  <body>
+        <style>
+            /* Styling van het Gameboard, 
+             * netjes in het midden van de pagina
+             */
+            #gameboard {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                border: 1px solid #CCC; 
+            }
 
-    <div class="container-fluid">
+            /* Styling van het scorebord */
+            #scoreboard {
+                text-align: center;
+                font-size: 80px;
+                font-family: 'Arial';
+                margin-top: 40px;
+            }
+        </style>
+
+    </head>
+    <body>
+        	<!-- Hier staat de score -->
+          <div id='scoreboard'>0</div>
         
+          <!-- Dit is het tekengebied waar het spelletje in gaat draaien -->
+          <canvas id='gameboard' width='400' height='400'></canvas>
+        
+          <script>
+            /// Variabelen
+              let score = 0
+              const SCORE_ADDITION = 100
+              const scoreBoard = document.getElementById('scoreboard')
 
-    
-      <div class="row">          
-        <div class="col-md-12">
+              const PIXEL_SIZE = 10
 
-           <!-- NAVIGATION -->
-           <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <button
-              class="navbar-toggler"
-              type="button"
-              data-toggle="collapse"
-              data-target="#bs-example-navbar-collapse-1"
-            >
-              <span class="navbar-toggler-icon"></span>
-            </button>
-            <a class="navbar-brand" href="#">Brand</a>
-            <div
-              class="collapse navbar-collapse"
-              id="bs-example-navbar-collapse-1"
-            >
-              <ul class="navbar-nav">
-                <li class="nav-item active">
-                  <a class="nav-link" href="#"
-                    >Link <span class="sr-only">(current)</span></a
-                  >
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="#">Link</a>
-                </li>
-                <li class="nav-item dropdown">
-                  <a
-                    class="nav-link dropdown-toggle"
-                    href="http://example.com"
-                    id="navbarDropdownMenuLink"
-                    data-toggle="dropdown"
-                    >Dropdown link</a
-                  >
-                  <div
-                    class="dropdown-menu"
-                    aria-labelledby="navbarDropdownMenuLink"
-                  >
-                    <a class="dropdown-item" href="#">Action</a>
-                    <a class="dropdown-item" href="#">Another action</a>
-                    <a class="dropdown-item" href="#">Something else here</a>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#">Separated link</a>
-                  </div>
-                </li>
-              </ul>
-              <form class="form-inline">
-                <input class="form-control mr-sm-2" type="text" />
-                <button class="btn btn-primary my-2 my-sm-0" type="submit">
-                  Search
-                </button>
-              </form>
-              <ul class="navbar-nav ml-md-auto">
-                <li class="nav-item active">
-                  <a class="nav-link" href="#"
-                    >Link <span class="sr-only">(current)</span></a
-                  >
-                </li>
-                <li class="nav-item dropdown">
-                  <a
-                    class="nav-link dropdown-toggle"
-                    href="http://example.com"
-                    id="navbarDropdownMenuLink"
-                    data-toggle="dropdown"
-                    >Dropdown link</a
-                  >
-                  <div
-                    class="dropdown-menu dropdown-menu-right"
-                    aria-labelledby="navbarDropdownMenuLink"
-                  >
-                    <a class="dropdown-item" href="#">Action</a>
-                    <a class="dropdown-item" href="#">Another action</a>
-                    <a class="dropdown-item" href="#">Something else here</a>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#">Separated link</a>
-                  </div>
-                </li>
-              </ul>
-            </div>
-           </nav>
-          <!-- END NAVIGATION-->
+              const gameboard = document.getElementById('gameboard')
+              const snakeboard = gameboard.getContext('2d')
 
-          <!-- BIG "HELLO" -->
-          <div class="jumbotron">
-            <h2>
-              Hello, world!
-            </h2>
-            <p>
-              This is a template for a simple marketing or informational
-              website. It includes a large callout called the hero unit and
-              three supporting pieces of content. Use it as a starting point to
-              create something more unique.
-            </p>
-            <p>
-              <a class="btn btn-primary btn-large" href="#">Learn more</a>
-            </p>
-          </div>
-          <!-- END BIG "HELLO" -->
-        </div>
-      </div>
+              const FOOD_COLOR = 'orange'
+              let foodX, foodY
+              let foodEaten = true
+
+              const SNAKE_SPEED = 100
+
+              const LEFT_KEY = 37
+              const RIGHT_KEY = 39
+              const UP_KEY = 38
+              const DOWN_KEY = 40
+
+            // Richting
+            let dirX = PIXEL_SIZE
+            let dirY = 0
+
+            document.addEventListener("keydown", (event) => changeDirection(event))
+
+  
+  
+            /// "Game Engine"
+            const isGameOver = () => {
+              for (let i = 4; i < snake.length; i++) {
+                if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) {
+                    return(true)
+                } 
+              }
+
+              let hitRightWall = snake[0].x > (gameboard.width - PIXEL_SIZE)
+              let hitLeftWall = snake[0].x < 0
+              
+              let hitBottomWall = snake[0].y > (gameboard.height - PIXEL_SIZE)
+              let hitTopWall = snake[0].y < 0
+              
+              return(hitRightWall || hitLeftWall || hitBottomWall || hitTopWall)
+            }
+
+            const changeDirection = (event) => {
+              let keyPressed = event.keyCode
+              
+              let goingUp = (dirY === -PIXEL_SIZE)
+              let goingDown = (dirY === PIXEL_SIZE)
+              let goingRight = (dirX === PIXEL_SIZE)
+              let goingLeft = (dirX === -PIXEL_SIZE)
+              
+              if (keyPressed === LEFT_KEY && !goingRight) {
+                dirX = -PIXEL_SIZE
+                dirY = 0
+              }
+              
+              if (keyPressed === UP_KEY && !goingDown) {
+                dirX = 0
+                dirY = -PIXEL_SIZE
+              }
+              
+              if (keyPressed === RIGHT_KEY && !goingLeft) {
+                dirX = PIXEL_SIZE
+                dirY = 0
+              }
+              
+              if (keyPressed === DOWN_KEY && !goingUp) {
+                dirX = 0
+                dirY = PIXEL_SIZE
+              }
+              
+            }
+            
+            /// Generieke Functies    
+            const drawPixel = (x, y, color) => {
+            snakeboard.fillStyle = color
+            snakeboard.fillRect(x, y, PIXEL_SIZE, PIXEL_SIZE)
+            }
+
+            const randomPosition = (max) => {
+            let randomNumber = (Math.random() * max) / PIXEL_SIZE
+            let position = Math.round(randomNumber) * PIXEL_SIZE
+            
+            return(position)
+            }
+            
+            const drawGrid = () => {
+              for(let i = 0; i < gameboard.height; i += PIXEL_SIZE) {
+                for(let j = 0; j < gameboard.width; j += PIXEL_SIZE) {
+                    snakeboard.strokeStyle = "rgba(0,0,0,0.05)"
+                    snakeboard.strokeRect(i, j, PIXEL_SIZE, PIXEL_SIZE)
+                }
+              }
+            }
+
+            const clearBoard = () =>  {
+              snakeboard.clearRect(0,0, gameboard.width, gameboard.height)
+            }
+
+
+            /// Score
+            const updateScore = () => {
+            score += SCORE_ADDITION
+            scoreBoard.innerHTML = score
+            }
+
+            /// Food
+            const drawFood = () => {
+              if(foodEaten) {
+                foodX = randomPosition(gameboard.width - PIXEL_SIZE)
+                foodY = randomPosition(gameboard.height - PIXEL_SIZE)
+                foodEaten = false
+            }
+
+            drawPixel(foodX, foodY, FOOD_COLOR)
+            }
       
+            /// Snake
+            let snake = [
+              {
+                x: Math.round(gameboard.width / 2),
+                y: Math.round(gameboard.height / 2)
+              },
+            ];
 
-      <!-- COLUMNS -->
-      <div class="row">
-        <div class="col-md-4">
-          <h2>
-            Heading
-          </h2>
-          <p>
-            Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
-            tellus ac cursus commodo, tortor mauris condimentum nibh, ut
-            fermentum massa justo sit amet risus. Etiam porta sem malesuada
-            magna mollis euismod. Donec sed odio dui.
-          </p>
-          <p>
-            <a class="btn" href="#">View details »</a>
-          </p>
-        </div>
-        <div class="col-md-4">
-          <h2>
-            Heading
-          </h2>
-          <p>
-            Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
-            tellus ac cursus commodo, tortor mauris condimentum nibh, ut
-            fermentum massa justo sit amet risus. Etiam porta sem malesuada
-            magna mollis euismod. Donec sed odio dui.
-          </p>
-          <p>
-            <a class="btn" href="#">View details »</a>
-          </p>
-        </div>
-        <div class="col-md-4">
-          <h2>
-            Heading
-          </h2>
-          <p>
-            Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
-            tellus ac cursus commodo, tortor mauris condimentum nibh, ut
-            fermentum massa justo sit amet risus. Etiam porta sem malesuada
-            magna mollis euismod. Donec sed odio dui.
-          </p>
-          <p>
-            <a class="btn" href="#">View details »</a>
-          </p>
-        </div>
-      </div>
-      <!-- END COLUMNS -->
+            const SNAKE_HEAD = 'darkgreen'
+            const SNAKE_BODY = 'lightgreen'
 
-    </div>
+            const initSnake = () => {
+              for(let i = 1; i < 5; i++) {
+                snake.push({ x: (snake[0].x - (i*PIXEL_SIZE)), y: snake[0].y })
+              }
+            }
 
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="js/jquery.js"></script>
-    <script src="js/popper.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-  </body>
+            const drawSnake = () => {
+              snake.forEach( (snakePart, index) => {                                       
+                  let color = index === 0 ? SNAKE_HEAD : SNAKE_BODY
+                  drawPixel(snakePart.x, snakePart.y, color)                
+              })
+            }
+            
+            const moveSnake = () => {
+              let head = {x: snake[0].x + dirX, y: snake[0].y + dirY}
+              snake.unshift(head)
+
+              foodEaten = (snake[0].x === foodX && snake[0].y === foodY) 
+                if (foodEaten) {
+                    updateScore()
+                    drawFood()
+                } else {
+                    snake.pop()
+                }
+              }
+
+            const main = () => {
+              
+              if(!isGameOver()) {
+                setTimeout( () => {
+                  clearBoard()
+                  drawGrid()
+                  drawFood()
+                  moveSnake()
+                  drawSnake()
+
+                  main()
+                }, SNAKE_SPEED)
+              } else {
+                alert("GAME OVER!")
+              }
+            }
+            initSnake()
+            main()
+
+          </script>
+        
+    </body>
 </html>
+
+  
+      

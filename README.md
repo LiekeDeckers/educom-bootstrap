@@ -1,5 +1,3 @@
-# Bootstrap 
-
-Basistraining Bootstrap. 
-
-> Module: https://e-learning.educom.nu/essentials/Boostrap/intro
+# Snake 
+ 
+> Module: https://e-learning.educom.nu/specials/snake/
